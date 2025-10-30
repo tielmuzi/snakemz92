@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake (Versão MZ92)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="website icon" type="png"
+    href="images/logo.png">
+</head>
+<body class="min-h-screen transition-all duration-300" id="gameBody">
+    <!-- Partículas de fundo -->
+    <div id="particles" class="fixed inset-0 pointer-events-none z-0"></div>
+    
+    <!-- Tela de Boas-Vindas -->
+    <div id="welcomeScreen" class="screen active min-h-screen flex flex-col justify-center items-center relative z-10">
+        <div class="text-center mb-8">
+            <h1 class="text-6xl md:text-8xl font-bold mb-4 game-title">Snake</h1>
+            <p class="text-xl md:text-2xl opacity-80">(Versão MZ92)</p>
+        </div>
+        
+        <div class="flex flex-col space-y-4 w-full max-w-xs">
+            <button id="playBtn" class="game-btn primary">
+                <i class="fas fa-play mr-2"></i>Jogar
+            </button>
+            <button id="settingsBtn" class="game-btn secondary">
+                <i class="fas fa-cog mr-2"></i>Configurações
+            </button>
+            <button id="statsBtn" class="game-btn secondary">
+                <i class="fas fa-chart-bar mr-2"></i>Estatísticas
+            </button>
+            <button id="creditsBtn" class="game-btn secondary">
+                <i class="fas fa-info-circle mr-2"></i>Créditos
+            </button>
+        </div>
+    </div>
+
+    <!-- Tela do Jogo -->
+    <div id="gameScreen" class="screen min-h-screen flex flex-col">
+        <!-- Header do jogo -->
+        <div class="game-header p-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <button id="pauseBtn" class="game-btn small">
+                    <i class="fas fa-pause"></i>
+                </button>
+                <button id="backToMenuBtn" class="game-btn small">
+                    <i class="fas fa-home"></i>
+                </button>
+            </div>
+            <div class="game-info text-center">
+                <div class="text-sm opacity-80">Pontuação</div>
+                <div id="score" class="text-2xl font-bold">0</div>
+            </div>
+            <div class="game-info text-center">
+                <div class="text-sm opacity-80">Nível</div>
+                <div id="level" class="text-2xl font-bold">1</div>
+            </div>
+        </div>
+
+        <!-- Canvas do jogo -->
+        <div class="flex-1 flex justify-center items-center p-4">
+            <canvas id="gameCanvas" class="border-2 rounded-lg shadow-lg"></canvas>
+        </div>
+
+        <!-- Controles mobile -->
+        <div id="mobileControls" class="mobile-controls p-4 flex justify-center">
+            <div class="grid grid-cols-3 gap-2 w-48">
+                <div></div>
+                <button id="upBtn" class="control-btn">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+                <div></div>
+                <button id="leftBtn" class="control-btn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div></div>
+                <button id="rightBtn" class="control-btn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div></div>
+                <button id="downBtn" class="control-btn">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Configurações -->
+    <div id="settingsScreen" class="screen min-h-screen p-4">
+        <div class="max-w-2xl mx-auto">
+            <div class="flex items-center mb-6">
+                <button id="backFromSettings" class="game-btn small mr-4">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-3xl font-bold">Configurações</h2>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Acessibilidade -->
+                <div class="settings-section">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-universal-access mr-2"></i>Acessibilidade
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="setting-item">
+                            <label class="flex items-center justify-between">
+                                <span>Alto Contraste</span>
+                                <input type="checkbox" id="highContrast" class="toggle">
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="flex items-center justify-between">
+                                <span>Tamanho da Fonte</span>
+                                <select id="fontSize" class="game-select">
+                                    <option value="small">Pequena</option>
+                                    <option value="medium" selected>Média</option>
+                                    <option value="large">Grande</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="flex items-center justify-between">
+                                <span>Controles</span>
+                                <select id="controlType" class="game-select">
+                                    <option value="keyboard">Teclado</option>
+                                    <option value="mouse">Mouse</option>
+                                    <option value="touch">Toque</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tema Visual -->
+                <div class="settings-section">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-palette mr-2"></i>Tema Visual
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <button class="theme-btn active" data-theme="light" onclick="window.snakeApp.setTheme('light')">
+                            <i class="fas fa-sun"></i>
+                            <span>Modo Claro</span>
+                        </button>
+                        <button class="theme-btn" data-theme="dark" onclick="window.snakeApp.setTheme('dark')">
+                            <i class="fas fa-moon"></i>
+                            <span>Modo Escuro</span>
+                        </button>
+                        <button class="theme-btn" data-theme="neon" onclick="window.snakeApp.setTheme('neon')">
+                            <i class="fas fa-bolt"></i>
+                            <span>Modo Neon</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dificuldade -->
+                <div class="settings-section">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dificuldade
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button class="difficulty-btn" data-difficulty="easy">
+                            <i class="fas fa-leaf"></i>
+                            <span>Fácil</span>
+                        </button>
+                        <button class="difficulty-btn active" data-difficulty="normal">
+                            <i class="fas fa-balance-scale"></i>
+                            <span>Normal</span>
+                        </button>
+                        <button class="difficulty-btn" data-difficulty="hard">
+                            <i class="fas fa-fire"></i>
+                            <span>Difícil</span>
+                        </button>
+                        <button class="difficulty-btn" data-difficulty="extreme">
+                            <i class="fas fa-skull"></i>
+                            <span>Extremo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Som -->
+                <div class="settings-section">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-volume-up mr-2"></i>Som
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="setting-item">
+                            <label class="flex items-center justify-between">
+                                <span>Volume Geral</span>
+                                <input type="range" id="masterVolume" min="0" max="100" value="70" class="slider">
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="flex items-center justify-between">
+                                <span>Efeitos Sonoros</span>
+                                <input type="checkbox" id="soundEffects" class="toggle" checked>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <label class="flex items-center justify-between">
+                                <span>Música de Fundo</span>
+                                <input type="checkbox" id="backgroundMusic" class="toggle" checked>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Estatísticas -->
+    <div id="statsScreen" class="screen min-h-screen p-4">
+        <div class="max-w-2xl mx-auto">
+            <div class="flex items-center mb-6">
+                <button id="backFromStats" class="game-btn small mr-4">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-3xl font-bold">Estatísticas</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Recorde de Pontuação</div>
+                        <div class="stat-value" id="highScore">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Partidas Jogadas</div>
+                        <div class="stat-value" id="gamesPlayed">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Tempo Total</div>
+                        <div class="stat-value" id="totalTime">0h 0m</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Nível Máximo</div>
+                        <div class="stat-value" id="maxLevel">1</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-apple-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Comida Coletada</div>
+                        <div class="stat-value" id="totalFood">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <button id="resetStats" class="game-btn danger w-full">
+                        <i class="fas fa-trash mr-2"></i>Resetar Estatísticas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Créditos -->
+    <div id="creditsScreen" class="screen min-h-screen p-4">
+        <div class="max-w-2xl mx-auto">
+            <div class="flex items-center mb-6">
+                <button id="backFromCredits" class="game-btn small mr-4">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-3xl font-bold">Créditos</h2>
+            </div>
+
+            <div class="space-y-6">
+                <div class="credits-section">
+                    <h3 class="text-xl font-semibold mb-3">Desenvolvedor</h3>
+                    <p class="text-lg">Salatiel Muzi - Estudante de Ciência da Computação</p>
+                </div>
+
+                <div class="credits-section">
+                    <h3 class="text-xl font-semibold mb-3">Tecnologias Utilizadas</h3>
+                    <ul class="space-y-1">
+                        <li>• HTML5 Canvas</li>
+                        <li>• CSS3 & Tailwind CSS</li>
+                        <li>• JavaScript ES6+</li>
+                        <li>• Web Audio API</li>
+                        <li>• LocalStorage API</li>
+                    </ul>
+                </div>
+
+                <div class="credits-section">
+                    <h3 class="text-xl font-semibold mb-3">Recursos de Áudio</h3>
+                    <p>Músicas e efeitos sonoros personalizados</p>
+                </div>
+
+                <div class="credits-section">
+                    <h3 class="text-xl font-semibold mb-3">Agradecimentos</h3>
+                    <p>Obrigado por jogar Snake (Versão MZ92). Esperamos que você tenha se divertido!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Pausa -->
+    <div id="pauseModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4">Jogo Pausado</h3>
+            <div class="space-y-3">
+                <button id="resumeBtn" class="game-btn primary w-full">
+                    <i class="fas fa-play mr-2"></i>Continuar
+                </button>
+                <button id="restartBtn" class="game-btn secondary w-full">
+                    <i class="fas fa-redo mr-2"></i>Reiniciar
+                </button>
+                <button id="quitBtn" class="game-btn danger w-full">
+                    <i class="fas fa-home mr-2"></i>Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Game Over -->
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold mb-4">Game Over!</h3>
+            <div class="text-center mb-4">
+                <div class="text-lg">Pontuação Final</div>
+                <div id="finalScore" class="text-3xl font-bold">0</div>
+            </div>
+            <div class="space-y-3">
+                <button id="playAgainBtn" class="game-btn primary w-full">
+                    <i class="fas fa-redo mr-2"></i>Jogar Novamente
+                </button>
+                <button id="backToMenuFromGameOver" class="game-btn secondary w-full">
+                    <i class="fas fa-home mr-2"></i>Menu Principal
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="footer fixed bottom-0 left-0 right-0 p-2 text-center text-sm opacity-70">
+        © 2025 Snake (Versão MZ92) — Todos os direitos reservados. Desenvolvido por Salatiel Muzi.
+    </footer>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="game.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
